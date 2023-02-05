@@ -122,6 +122,42 @@ ALL_FOODS = ["FriedEgg",
             "FriedMushroom"]
 
 
+def importFile(path):
+    file = open(path, "rt")
+    text = file.readline()
+    return text
+
+
+def tokenSearch(token_name, text):
+    liste = text.split(f"{token_name}")
+    return liste
+
+
+def cleanList(liste):
+    listeClean = []
+    for i in range(1, len(liste), 2):
+        listeClean.append(liste[i])
+    return listeClean
+
+
+def makeRecipeDict():
+    file = importFile("C:\\Users\\Marie\\Desktop\\Stardew-Cooker\\test_330101121.xml")
+
+    tkRecipes = tokenSearch("cookingRecipes", file)
+
+    tkRecipesClean = re.sub('[<>/ ]', '', tkRecipes[1])
+
+    tkString = tokenSearch("string", tkRecipesClean)
+    tkInt = tokenSearch("int", tkRecipesClean)
+
+
+    tkStringClean = cleanList(tkString)
+    tkIntClean = cleanList(tkInt)
+
+    RecipeDict = dict(zip(tkStringClean,tkIntClean))
+    return RecipeDict
+
+
 def print_meal(meal, style=1):
 
     """ Transforms strings from one string to multiple strings """
