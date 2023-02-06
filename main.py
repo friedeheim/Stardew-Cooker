@@ -122,40 +122,38 @@ ALL_FOODS = ["FriedEgg",
             "FriedMushroom"]
 
 
-def importFile(path):
+def import_File(path):
     file = open(path, "rt")
     text = file.readline()
     return text
 
 
-def tokenSearch(token_name, text):
+def token_Search(token_name, text):
     liste = text.split(f"{token_name}")
     return liste
 
 
-def cleanList(liste):
-    listeClean = []
+def clean_List(liste):
+    listClean = []
     for i in range(1, len(liste), 2):
-        listeClean.append(liste[i])
-    return listeClean
+        listClean.append(liste[i])
+    return listClean
 
 
-def makeRecipeDict():
-    file = importFile("C:\\Users\\Marie\\Desktop\\Stardew-Cooker\\test_330101121.xml")
-
-    tkRecipes = tokenSearch("cookingRecipes", file)
+def make_Player_Food_Dict(text):
+    tkRecipes = token_Search("cookingRecipes", text)
 
     tkRecipesClean = re.sub('[<>/ ]', '', tkRecipes[1])
 
-    tkString = tokenSearch("string", tkRecipesClean)
-    tkInt = tokenSearch("int", tkRecipesClean)
+    tkString = token_Search("string", tkRecipesClean)
+    tkInt = token_Search("int", tkRecipesClean)
 
 
-    tkStringClean = cleanList(tkString)
-    tkIntClean = cleanList(tkInt)
+    tkStringClean = clean_List(tkString)
+    tkIntClean = clean_List(tkInt)
 
-    RecipeDict = dict(zip(tkStringClean,tkIntClean))
-    return RecipeDict
+    player_food_dict = dict(zip(tkStringClean,tkIntClean))
+    return player_food_dict
 
 
 def print_meal(meal, style=1):
@@ -364,21 +362,45 @@ def print_missing_recipes(player_recipes_list, all_foods, style=2, amount_per_li
                 printed_in_line = 1
 
 
-if __name__ == "__main__":
-    # Call the functions to test them
-    print("the already_cooked() function in Style 1 (everything in a new line)\n")
-    already_cooked(dummydict, 1)
-    print("\n\nthe already_cooked() function in Style 2 (everything in one long list)\n")
-    already_cooked(dummydict)
-    print("\n\nthe print_missing_food() function in Style 1 (everything in a new line)\n")
-    print_missing_food(dummydict, ALL_FOODS, 1)
-    print("\n\nthe print_missing_food() function in Style 2 (everything in one long list)\n")
-    print_missing_food(dummydict, ALL_FOODS)
-    print("\n\nthe owned_recipes() function in Style 1 (everything in a new line)\n")
-    owned_recipes(dummylist, 1)
-    print("\n\nthe owned_recipes() function in Style 2 (everything in one long list)\n")
-    owned_recipes(dummylist)
-    print("\n\nthe print_missing_recipes() function in Style 1 (everything in a new line)\n")
-    print_missing_recipes(dummylist, ALL_FOODS, 1)
-    print("\n\nthe print_missing_recipes() function in Style 2 (everything in one long list)\n")
-    print_missing_recipes(dummylist, ALL_FOODS)
+# if __name__ == "__main__":
+#     # Call the functions to test them
+#     print("the already_cooked() function in Style 1 (everything in a new line)\n")
+#     already_cooked(dummydict, 1)
+#     print("\n\nthe already_cooked() function in Style 2 (everything in one long list)\n")
+#     already_cooked(dummydict)
+#     print("\n\nthe print_missing_food() function in Style 1 (everything in a new line)\n")
+#     print_missing_food(dummydict, ALL_FOODS, 1)
+#     print("\n\nthe print_missing_food() function in Style 2 (everything in one long list)\n")
+#     print_missing_food(dummydict, ALL_FOODS)
+#     print("\n\nthe owned_recipes() function in Style 1 (everything in a new line)\n")
+#     owned_recipes(dummylist, 1)
+#     print("\n\nthe owned_recipes() function in Style 2 (everything in one long list)\n")
+#     owned_recipes(dummylist)
+#     print("\n\nthe print_missing_recipes() function in Style 1 (everything in a new line)\n")
+#     print_missing_recipes(dummylist, ALL_FOODS, 1)
+#     print("\n\nthe print_missing_recipes() function in Style 2 (everything in one long list)\n")
+#     print_missing_recipes(dummylist, ALL_FOODS)
+
+
+#%%
+from io import StringIO
+import streamlit as st
+
+
+file = st.file_uploader("Pleas upload Save file!")
+if file is not None:
+    text = StringIO(file.getvalue().decode("utf-8")).readline()
+    
+    with st.expander("Expand to see all recipes you own:"):
+        recipeDict = make_Player_Food_Dict(text)
+        for elements in recipeDict.keys():
+            st.write("- " + elements)
+        
+    with st.expander("Expand to see missing recipes:"):
+        missing_recipes = still_missing(recipeDict, ALL_FOODS)
+        for elements in missing_recipes:
+            st.write("- " + elements)
+    
+    
+
+
