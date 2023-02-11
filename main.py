@@ -8,37 +8,9 @@ Created on Sat Jan  7 19:50:26 2023
 from io import StringIO
 import streamlit as st
 import re
+from io import StringIO
+import streamlit as st
 
-
-# Dummies for testing purposes
-dummydict = {"FriedEgg": 3,
-             "Omelet": 6,
-             "StrangeBun": 1,
-             "VegetableStew": 7,
-             "ParsnipSoup": 7,
-             "PinkCake": 2,
-             "Tortilla": 3,
-             "StirFry": 3,
-             "TripleShotEspresso": 5,
-             "DishO'TheSea": 2,
-             "Miner'sTreat": 1}
-
-dummylist = ["FriedEgg",
-             "Omelet",
-             "StrangeBun",
-             "VegetableStew",
-             "ParsnipSoup",
-             "PinkCake",
-             "Tortilla",
-             "StirFry",
-             "TripleShotEspresso",
-             "DishO'TheSea",
-             "Miner'sTreat",
-             "Bread",
-             "Pizza",
-             "FishTaco",
-             "Pancakes",
-             "MakiRoll"]
 
 # Dict with all possible recipes
 ALL_RECIPES = {"FriedEgg": {"Egg": 1},
@@ -365,6 +337,7 @@ def still_missing(player_food_dict, all_foods):
 
 """    !!! START OF STREAMLIT IMPLEMENTATION !!!  """
 
+
 # save file upload
 file = st.file_uploader("Please           upload Save file!")
 
@@ -398,12 +371,28 @@ if file is not None:
         if st.button("close", help="close needed ingredients for not yet cooked meals"):
             cooking_help = False
 
-        choice = st.selectbox("choose meal to show recipe", still_missing(recipeDict, ALL_RECIPES.keys()))
+        temp = {}
+        
+        for recipe in still_missing(recipeDict, ALL_RECIPES.keys()):
+            for ingredient in ALL_RECIPES[recipe]:
+                if ingredient not in temp.keys():
+                    temp[ingredient] = ALL_RECIPES[recipe][ingredient]
+                elif ingredient in temp.keys():
+                    temp[ingredient] = temp[ingredient] + ALL_RECIPES[recipe][ingredient]
 
-        if choice is not None:
-            st.write(choice + ":")
-            temp = ALL_RECIPES[choice].keys()
-            for i in temp:
-                st.write("- " + i + " (" + str(ALL_RECIPES[choice][i]) + ")")
+        temp = dict(sorted(temp.items(), key=lambda x:x[1], reverse=True))
+        st.subheader("All needed ingredients to cook all missing meals:")
+        for keys, values in temp.items():
+            st.write("- " + write_meal(keys, 2) + ": " + str(values) + "x")
+
+        
+                    
+#        choice = st.selectbox("choose meal to show recipe", still_missing(recipeDict, ALL_RECIPES.keys()))
+#
+#        if choice is not None:
+#            st.write(choice + ":")
+#            temp = ALL_RECIPES[choice].keys()
+#            for i in temp:
+#                st.write("- " + i + " (" + str(ALL_RECIPES[choice][i]) + ")")
             
             
