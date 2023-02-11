@@ -5,7 +5,8 @@ Created on Sat Jan  7 19:50:26 2023
 @author: vogel
 """
 
-
+from io import StringIO
+import streamlit as st
 import re
 from io import StringIO
 import streamlit as st
@@ -215,12 +216,11 @@ ALL_RECIPES = {"FriedEgg": {"Egg": 1},
                                  "Oil": 1}}
 
 
-def token_Search(token_name, text):
-    liste = text.split(f"{token_name}")
-    return liste
-
-
 def clean_List(liste):
+    
+    """ simple function to make a new list with every second element of the old one,
+        needed because of the open and close format of XML """
+    
     listClean = []
     for i in range(1, len(liste), 2):
         listClean.append(liste[i])
@@ -228,19 +228,66 @@ def clean_List(liste):
 
 
 def make_Player_Food_Dict(text):
-    tkRecipes = token_Search("cookingRecipes", text)
+    
+    """ makes a dictionary of all recipes the player owns.
+        keys is name of recipe, values are amount cooked """
+    
+    tkRecipes = text.split("cookingRecipes")
 
+    # Removes unnecessary symbols
     tkRecipesClean = re.sub('[<>/ ]', '', tkRecipes[1])
+    
+    # makes list of all Recipenames
+    tkString = tkRecipesClean.split("string")
+    
+    # makes list of Amount cooked
+    tkInt = tkRecipesClean.split("int")
 
-    tkString = token_Search("string", tkRecipesClean)
-    tkInt = token_Search("int", tkRecipesClean)
-
-
+    # removes unnecessary elements in the list
     tkStringClean = clean_List(tkString)
     tkIntClean = clean_List(tkInt)
 
     player_food_dict = dict(zip(tkStringClean,tkIntClean))
     return player_food_dict
+
+
+def chest_Content_Dict(text):
+    
+    """ makes a dictionary of all items the player has in chests.
+        keys is name of item, values are amount owned """
+    
+    # makes one string element for all chest and saves them in a list
+    tkChest = text.split("Object xsi:type=\"Chest\"")
+    
+    # makes one list with string element for all items
+    # discards first element since its not needed
+    allItems = []
+    for element in tkChest[1:]:
+        if "<Item xsi:type=\"" in element:
+            allItems.extend(element.split("<Item xsi:type=\"")[1:])
+    
+    # cleans list of unnecessary symbols
+    allItemsClean = []
+    for element in allItems:
+        allItemsClean.append(re.sub('[<>/ \']', '', element))
+    
+    # list of all item names
+    allItemsName = []
+    for element in allItemsClean:
+        allItemsName.append(element.split("name")[1])
+    
+    # list of amount for each item
+    allItemsStack = []
+    for element in allItemsClean:
+        allItemsStack.append(int(element.split("Stack")[1]))
+    
+    # since dict overwrites amount if item already exists, this makes a dict with all names and value = 0
+    chest_Content_Dict = dict.fromkeys(allItemsName, 0)
+    # then adds amount for each item in list
+    for name, stack in zip(allItemsName, allItemsStack):
+        chest_Content_Dict[name] = chest_Content_Dict[name] + stack
+    
+    return chest_Content_Dict
 
 
 def write_meal(meal, style=1):
@@ -286,6 +333,12 @@ def still_missing(player_food_dict, all_foods):
     return missing_foods
 
 
+
+
+"""    !!! START OF STREAMLIT IMPLEMENTATION !!!  """
+
+
+# save file upload
 file = st.file_uploader("Please           upload Save file!")
 
 if file is not None:
