@@ -5,7 +5,8 @@ Created on Sat Jan  7 19:50:26 2023
 @author: vogel
 """
 
-
+from io import StringIO
+import streamlit as st
 import re
 
 
@@ -271,6 +272,33 @@ def make_Player_Food_Dict(text):
     return player_food_dict
 
 
+def chest_Content_Dict(text):
+    tkChest = token_Search("Object xsi:type=\"Chest\"", text)
+    
+    allItems = []
+    for element in tkChest[1:]:
+        if "<Item xsi:type=\"" in element:
+            allItems.extend(token_Search("<Item xsi:type=\"", element)[1:])
+    
+    allItemsClean = []
+    for element in allItems:
+        allItemsClean.append(re.sub('[<>/ \']', '', element))
+    
+    allItemsName = []
+    for element in allItemsClean:
+        allItemsName.append(token_Search("name", element)[1])
+    
+    allItemsStack = []
+    for element in allItemsClean:
+        allItemsStack.append(int(token_Search("Stack", element)[1]))
+    
+    chest_Content_Dict = dict.fromkeys(allItemsName, 0)
+    for name, stack in zip(allItemsName, allItemsStack):
+        chest_Content_Dict[name] = chest_Content_Dict[name] + stack
+    
+    return chest_Content_Dict
+
+
 def write_meal(meal, style=1):
 
     """ Transforms strings from one string to multiple strings """
@@ -314,9 +342,8 @@ def still_missing(player_food_dict, all_foods):
     return missing_foods
 
 
-from io import StringIO
-import streamlit as st
 
+"""Start of Stremlit Implementation"""
 
 file = st.file_uploader("Please           upload Save file!")
 
