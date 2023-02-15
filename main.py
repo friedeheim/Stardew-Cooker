@@ -349,9 +349,10 @@ def still_missing(player_food_dict, all_foods):
 # """    !!! START OF STREAMLIT IMPLEMENTATION !!!  """ #
 
 
+
 st.header("Stardew Cooker")
 
-st.write("This is a Stardew Valley Helper Tool! It is designed to help people get a simple overview of what recipes are still missing to achieve Perfection or the Gourmet Chef Achievment. For this Tool to work, its best to put all your items in chests! Otherwise those items will be missed.")
+st.write("This is a Stardew Valley Helper Tool! It is designed to help people get a simple overview of what recipes are still missing to achieve Perfection or the Gourmet Chef Achievment. For this Tool to work, its best to put all your items in chests! Otherwise those items will be missed. (Auto Grabber count as Chests :))")
 st.write("WARNING: Mods that add recipes may break this tool and make it not function properly!")
 st.write("") # aesthetic purposes
 
@@ -365,12 +366,24 @@ if file is not None:
     text = StringIO(file.getvalue().decode("utf-8")).readline()
     recipeDict = make_Player_Food_Dict(text)
 
+    # Reward for cooking all recipes!
+    if len(has_cooked(recipeDict)) == 80:
+        st.subheader("All recipies have been gathered!")
+        st.balloons()
+        done = True
+
 
     # View Recipes
+    # FIRST SECTION OF WEBSITE
+
     st.write("") # aesthetic purposes
     with st.expander("View Recipes:"):
         col1, col2, col3 = st.columns(3)
 
+        # st.write("Missing: All recipes you cant make yet. Owned: All recipe")
+        # st.write("")
+
+        # Views all Missing Recipes i.e. not yet collected
         with col1:
             missing = st.checkbox("Missing")
             all_missing = still_missing(recipeDict, ALL_RECIPES)
@@ -382,6 +395,7 @@ if file is not None:
                 else:
                     st.write("No missing recipes.")
 
+        # views all collected but not cooked recipes
         with col2:
             owned = st.checkbox("Owned")
             all_owned = []
@@ -398,6 +412,7 @@ if file is not None:
                 else:
                     st.write("No owned recipes.")
 
+        # views all cooked recipes
         with col3:
             cooked = st.checkbox("Cooked")
             all_cooked = has_cooked(recipeDict)
@@ -411,42 +426,95 @@ if file is not None:
                     st.write("No cooked recipes.")
 
 
+
     # cooking helper
+    # SECOND SECTION OF WEBSITE
+    with st.expander("What Items are missing:"):
 
-    # with st.expander("What Items are missing:"):
+        view = st.radio("Please choose one:", ("All Items", "All missing Items", "All Items in Chests"))
 
+        # makes and displays Dict of all Items needed to cook all uncooked recipes
+        neededItems = {}
+        has_not_cooked = []
+        has_cooked = has_cooked(recipeDict)
 
+        for element in ALL_RECIPES.keys():
+            if element not in has_cooked:
+                has_not_cooked.append(element)
 
-
-    cooking_help = False
-
-    if len(still_missing(recipeDict, ALL_RECIPES.keys())) != 0:
-        with col1:
-            if st.button("cooking helper", help="shows needed ingredients for not yet cooked dishes"):
-                cooking_help = True
-
-    if cooking_help == True:
-        with col2:
-            if st.button("close", help="close needed ingredients for not yet cooked dishes"):
-                cooking_help = False
-
-        temp = {}
-
-        for recipe in still_missing(recipeDict, ALL_RECIPES.keys()):
+        for recipe in has_not_cooked:
             for ingredient in ALL_RECIPES[recipe]:
-                if ingredient not in temp.keys():
-                    temp[ingredient] = ALL_RECIPES[recipe][ingredient]
-                elif ingredient in temp.keys():
-                    temp[ingredient] = temp[ingredient] + ALL_RECIPES[recipe][ingredient]
+                if ingredient not in neededItems.keys():
+                    neededItems[ingredient] = ALL_RECIPES[recipe][ingredient]
+                elif ingredient in neededItems.keys():
+                    neededItems[ingredient] = neededItems[ingredient] + ALL_RECIPES[recipe][ingredient]
 
-        temp = dict(sorted(temp.items(), key=lambda x:x[1], reverse=True))
-        st.subheader("All needed ingredients to cook all missing dishes:")
-        for keys, values in temp.items():
-            st.write("- " + write_meal(keys, 2) + ": " + str(values) + "x")
+        neededItems = dict(sorted(neededItems.items(), key=lambda x:x[1], reverse=True))
 
 
-    # Reward for cooking all recipes!
-    if len(has_cooked(recipeDict)) == 80:
-        st.subheader("All recipies have been gathered!")
-        st.balloons()
-        done = True
+        # dictonary of all needed items stored in chests
+        chestContent = chest_Content_Dict(text)
+        chestItems = {}
+        for item,amount in neededItems.items():
+            if item in chestContent.keys():
+                if chestContent[item] >= amount:
+                    chestItems.update({item:amount})
+                else:
+                    chestItems.update({item:chestContent[item]})
+
+
+        # makes all fully missing items (i.e. not in any chests)
+        missingItems = dict.fromkeys(chestItems.keys(), 0)
+        for item,amount in neededItems.items():
+            if item in chestItems.keys():
+                missingItems[item] = amount - chestItems[item]
+            else:
+                missingItems[item] = amount
+
+
+        # visual function for streamlit overview
+        # prints all items, all missing items or all items stored in chests
+        if view == "All Items":
+            st.write("#### All Items:")
+            col1, col2 = st.columns(2)
+            counter = 1
+            for keys, values in neededItems.items():
+                if  counter % 2 == 1:
+                    with col1:
+                        st.write("- " + write_meal(keys, 2) + ": " + str(values) + "x")
+                        counter += 1
+                else:
+                    with col2:
+                        st.write("- " + write_meal(keys, 2) + ": " + str(values) + "x")
+                        counter += 1
+
+
+        if view == "All missing Items":
+            st.write("#### All missing Items:")
+            col1, col2 = st.columns(2)
+            counter = 1
+            for keys, values in missingItems.items():
+                if values != 0:
+                    if  counter % 2 == 1:
+                        with col1:
+                            st.write("- " + write_meal(keys, 2) + ": " + str(values) + "x")
+                            counter += 1
+                    else:
+                        with col2:
+                            st.write("- " + write_meal(keys, 2) + ": " + str(values) + "x")
+                            counter += 1
+
+
+        if view == "All Items in Chests":
+            st.write("#### All Items in Chests:")
+            col1, col2 = st.columns(2)
+            counter = 1
+            for keys, values in chestItems.items():
+                if  counter % 2 == 1:
+                    with col1:
+                        st.write("- " + write_meal(keys, 2) + ": " + str(values) + "x")
+                        counter += 1
+                else:
+                    with col2:
+                        st.write("- " + write_meal(keys, 2) + ": " + str(values) + "x")
+                        counter += 1
