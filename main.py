@@ -520,4 +520,4 @@ if file is not None:
                         counter += 1
 
 st.write("")
-st.write("**Follow us on GitHub: https://github.com/friedeheim/Stardew-Cooker.git")
+st.write("**Follow us on GitHub:** https://github.com/friedeheim/Stardew-Cooker.git")
