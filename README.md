@@ -6,8 +6,10 @@
 
 # Stardew-Cooker
 A Stardew Valley tool to find out what items are missing to cook all recipes. This is a small but useful tool to safe you some sanity, while trying to achieve perfection. It tracks all your recipes (missing, owned and cooked) and gives you a personalized Overview of waht Items are missing to cook every recipe that your missing.
+___
+https://friedeheim-stardew-cooker-main-tldekv.streamlit.app/
 
-#### To get started simply install Streamlit:
+#### To get started simply click the Link or install Streamlit:
 
 ```py
 python -m pip install streamlit
