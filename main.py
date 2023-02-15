@@ -5,8 +5,6 @@ Created on Sat Jan  7 19:50:26 2023
 @author: vogel
 """
 
-from io import StringIO
-import streamlit as st
 import re
 from io import StringIO
 import streamlit as st
@@ -372,7 +370,7 @@ if file is not None:
             cooking_help = False
 
         temp = {}
-        
+
         for recipe in still_missing(recipeDict, ALL_RECIPES.keys()):
             for ingredient in ALL_RECIPES[recipe]:
                 if ingredient not in temp.keys():
@@ -385,8 +383,8 @@ if file is not None:
         for keys, values in temp.items():
             st.write("- " + write_meal(keys, 2) + ": " + str(values) + "x")
 
-        
-                    
+
+
 #        choice = st.selectbox("choose meal to show recipe", still_missing(recipeDict, ALL_RECIPES.keys()))
 #
 #        if choice is not None:
@@ -394,5 +392,3 @@ if file is not None:
 #            temp = ALL_RECIPES[choice].keys()
 #            for i in temp:
 #                st.write("- " + i + " (" + str(ALL_RECIPES[choice][i]) + ")")
-            
-            
