@@ -518,3 +518,6 @@ if file is not None:
                     with col2:
                         st.write("- " + write_meal(keys, 2) + ": " + str(values) + "x")
                         counter += 1
+
+st.write("")
+st.write("**Follow us on GitHub: https://github.com/friedeheim/Stardew-Cooker.git")
