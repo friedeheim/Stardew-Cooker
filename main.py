@@ -2,12 +2,12 @@
 """
 Created on Sat Jan  7 19:50:26 2023
 
-@author: vogel
+@author: vogel & friedeheim
 """
 
-import re
 from io import StringIO
 import streamlit as st
+import re
 
 
 # Dict with all possible recipes
@@ -215,10 +215,10 @@ ALL_RECIPES = {"FriedEgg": {"Egg": 1},
 
 
 def clean_List(liste):
-    
+
     """ simple function to make a new list with every second element of the old one,
         needed because of the open and close format of XML """
-    
+
     listClean = []
     for i in range(1, len(liste), 2):
         listClean.append(liste[i])
@@ -226,18 +226,18 @@ def clean_List(liste):
 
 
 def make_Player_Food_Dict(text):
-    
+
     """ makes a dictionary of all recipes the player owns.
         keys is name of recipe, values are amount cooked """
-    
+
     tkRecipes = text.split("cookingRecipes")
 
     # Removes unnecessary symbols
     tkRecipesClean = re.sub('[<>/ ]', '', tkRecipes[1])
-    
+
     # makes list of all Recipenames
     tkString = tkRecipesClean.split("string")
-    
+
     # makes list of Amount cooked
     tkInt = tkRecipesClean.split("int")
 
@@ -250,41 +250,41 @@ def make_Player_Food_Dict(text):
 
 
 def chest_Content_Dict(text):
-    
+
     """ makes a dictionary of all items the player has in chests.
         keys is name of item, values are amount owned """
-    
+
     # makes one string element for all chest and saves them in a list
     tkChest = text.split("Object xsi:type=\"Chest\"")
-    
+
     # makes one list with string element for all items
     # discards first element since its not needed
     allItems = []
     for element in tkChest[1:]:
         if "<Item xsi:type=\"" in element:
             allItems.extend(element.split("<Item xsi:type=\"")[1:])
-    
+
     # cleans list of unnecessary symbols
     allItemsClean = []
     for element in allItems:
         allItemsClean.append(re.sub('[<>/ \']', '', element))
-    
+
     # list of all item names
     allItemsName = []
     for element in allItemsClean:
         allItemsName.append(element.split("name")[1])
-    
+
     # list of amount for each item
     allItemsStack = []
     for element in allItemsClean:
         allItemsStack.append(int(element.split("Stack")[1]))
-    
+
     # since dict overwrites amount if item already exists, this makes a dict with all names and value = 0
     chest_Content_Dict = dict.fromkeys(allItemsName, 0)
     # then adds amount for each item in list
     for name, stack in zip(allItemsName, allItemsStack):
         chest_Content_Dict[name] = chest_Content_Dict[name] + stack
-    
+
     return chest_Content_Dict
 
 
@@ -294,9 +294,9 @@ def write_meal(meal, style=1):
 
     # Re searches for a capital letter ([A-Z]) followed by anything but capital letters ([^A-Z])
     splitted_food = re.findall('[A-Z][^A-Z]*', meal)
-    
+
     new_string = []
-    
+
     # Prints out the food's name in the same line, whitespace after the last one
     if style == 1:
         for parts in splitted_food:
@@ -317,9 +317,22 @@ def write_meal(meal, style=1):
     return string
 
 
+def has_cooked(player_food_dict):
+
+    """checks which recipes have not yet been cooked"""
+
+    allCooked = []
+
+    for recipe, amount in player_food_dict.items():
+        if amount != "0":
+            allCooked.append(recipe)
+
+    return allCooked
+
+
 def still_missing(player_food_dict, all_foods):
 
-    """ checks wich foods from ALL_RECIPES have not yet been cooked (aka are not in player_food_dict) """
+    """ checks wich foods from ALL_RECIPES have not yet been gathered (aka are not in player_food_dict) """
 
     missing_foods = []
 
@@ -327,47 +340,95 @@ def still_missing(player_food_dict, all_foods):
         if foodies not in player_food_dict:
             missing_foods.append(foodies)
 
-    # Returns list with all not yet cooked meals
+    # Returns list with all not yet cooked dishes
     return missing_foods
 
 
 
 
-"""    !!! START OF STREAMLIT IMPLEMENTATION !!!  """
+# """    !!! START OF STREAMLIT IMPLEMENTATION !!!  """ #
+
+
+st.header("Stardew Cooker")
+
+st.write("This is a Stardew Valley Helper Tool! It is designed to help people get a simple overview of what recipes are still missing to achieve Perfection or the Gourmet Chef Achievment. For this Tool to work, its best to put all your items in chests! Otherwise those items will be missed.")
+st.write("WARNING: Mods that add recipes may break this tool and make it not function properly!")
+st.write("") # aesthetic purposes
 
 
 # save file upload
-file = st.file_uploader("Please           upload Save file!")
+file = st.file_uploader("Please upload your Save file!")
 
+#appears only after file is uploaded
 if file is not None:
+    # parses through Players recipes
     text = StringIO(file.getvalue().decode("utf-8")).readline()
-
     recipeDict = make_Player_Food_Dict(text)
-    
+
+
+    # View Recipes
+    st.write("") # aesthetic purposes
+    with st.expander("View Recipes:"):
+        col1, col2, col3 = st.columns(3)
+
+        with col1:
+            missing = st.checkbox("Missing")
+            all_missing = still_missing(recipeDict, ALL_RECIPES)
+            if missing:
+                st.write("#### Missing:")
+                if len(all_missing) != 0:
+                    for element in all_missing:
+                        st.write("- " + write_meal(element))
+                else:
+                    st.write("No missing recipes.")
+
+        with col2:
+            owned = st.checkbox("Owned")
+            all_owned = []
+
+            for recipe, amount in recipeDict.items():
+                if amount == "0":
+                    all_owned.append(recipe)
+
+            if owned:
+                st.write("#### Owned:")
+                if len(all_owned) != 0:
+                    for element in all_owned:
+                        st.write("- " + write_meal(element))
+                else:
+                    st.write("No owned recipes.")
+
+        with col3:
+            cooked = st.checkbox("Cooked")
+            all_cooked = has_cooked(recipeDict)
+
+            if cooked:
+                st.write("#### Cooked:")
+                if len(all_cooked) != 0:
+                    for element in all_cooked:
+                        st.write("- " + write_meal(element))
+                else:
+                    st.write("No cooked recipes.")
+
+
+    # cooking helper
+
+    # with st.expander("What Items are missing:"):
+
+
+
+
     cooking_help = False
 
     if len(still_missing(recipeDict, ALL_RECIPES.keys())) != 0:
-        if st.button("cooking helper", help="shows needed ingredients for not yet cooked meals"):
-            cooking_help = True
-
-    if len(still_missing(recipeDict, ALL_RECIPES.keys())) == 0:
-        st.subheader("All recipies have been cooked!")
-        st.balloons()
-        done = True
-
-    with st.expander(f"Expand to see all recipes you own: [{len(make_Player_Food_Dict(text))}]"):
-
-        for elements in recipeDict.keys():
-            st.write("- " + write_meal(elements))
-        
-    with st.expander(f"Expand to see missing recipes: [{len(still_missing(recipeDict, ALL_RECIPES.keys()))}]"):
-        missing_recipes = still_missing(recipeDict, ALL_RECIPES.keys())
-        for elements in missing_recipes:
-            st.write("- " + write_meal(elements))
+        with col1:
+            if st.button("cooking helper", help="shows needed ingredients for not yet cooked dishes"):
+                cooking_help = True
 
     if cooking_help == True:
-        if st.button("close", help="close needed ingredients for not yet cooked meals"):
-            cooking_help = False
+        with col2:
+            if st.button("close", help="close needed ingredients for not yet cooked dishes"):
+                cooking_help = False
 
         temp = {}
 
@@ -379,16 +440,13 @@ if file is not None:
                     temp[ingredient] = temp[ingredient] + ALL_RECIPES[recipe][ingredient]
 
         temp = dict(sorted(temp.items(), key=lambda x:x[1], reverse=True))
-        st.subheader("All needed ingredients to cook all missing meals:")
+        st.subheader("All needed ingredients to cook all missing dishes:")
         for keys, values in temp.items():
             st.write("- " + write_meal(keys, 2) + ": " + str(values) + "x")
 
 
-
-#        choice = st.selectbox("choose meal to show recipe", still_missing(recipeDict, ALL_RECIPES.keys()))
-#
-#        if choice is not None:
-#            st.write(choice + ":")
-#            temp = ALL_RECIPES[choice].keys()
-#            for i in temp:
-#                st.write("- " + i + " (" + str(ALL_RECIPES[choice][i]) + ")")
+    # Reward for cooking all recipes!
+    if len(has_cooked(recipeDict)) == 80:
+        st.subheader("All recipies have been gathered!")
+        st.balloons()
+        done = True
