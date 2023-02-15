@@ -270,3 +270,8 @@ def test_recipe_comparer():
                              "IKnowItsSpelledWrongItsIntended": 18}}
 
     assert main.still_missing(test_player, test_archive) == ["Stuff", "Things", "Objects"]
+
+if __name__ == "__main__":
+    test_chest_parser()
+    test_recipe_comparer()
+    test_recipe_parser()
