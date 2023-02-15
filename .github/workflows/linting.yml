@@ -32,3 +32,4 @@ jobs:
       - name: Test format with pylint
         run: |
           pylint main.py
+          pylint tests/test.py
