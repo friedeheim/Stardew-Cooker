@@ -444,6 +444,7 @@ if file is not None:
         for keys, values in temp.items():
             st.write("- " + write_meal(keys, 2) + ": " + str(values) + "x")
 
+
     # Reward for cooking all recipes!
     if len(has_cooked(recipeDict)) == 80:
         st.subheader("All recipies have been gathered!")
