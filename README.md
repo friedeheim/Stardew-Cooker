@@ -10,14 +10,14 @@ A Stardew Valley tool to find out what items are missing to cook all recipes. Th
 #### To get started simply install Streamlit:
 
 ```py
-pip install streamlit
+python -m pip install streamlit
 ```
 
 and afterwards in your console of choice, navigate over to where you downloaded the Repository.
 Then simply write:
 
 ```py
-streamlit run main.py
+python -m streamlit run main.py
 ```
 
 And our tool should open up in your browser! 
